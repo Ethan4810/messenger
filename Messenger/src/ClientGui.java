@@ -35,7 +35,7 @@ public class ClientGui extends Thread {
 		this.serverName = "localhost";
 		this.PORT = 12345;
 		this.name = "nickname";
-		
+
 		String fontfamily = "Arial, sans-serif";
 		Font font = new Font(fontfamily, Font.PLAIN, 15);
 
@@ -75,12 +75,12 @@ public class ClientGui extends Thread {
 		final JScrollPane jtextInputChatSP = new JScrollPane(jtextInputChat);
 		jtextInputChatSP.setBounds(10, 720, 350, 40);
 
-		// send button 
+		// send button
 		final JButton jsbtn = new JButton("Send");
 		jsbtn.setFont(font);
 		jsbtn.setBounds(360, 720, 130, 40);
 
-		// disconnect button 
+		// disconnect button
 		final JButton jsbtndeco = new JButton("X");
 		jsbtndeco.setFont(font);
 		jsbtndeco.setBounds(10, 10, 40, 40);
@@ -147,8 +147,7 @@ public class ClientGui extends Thread {
 
 		// info sur le Chat
 		appendToPane(jtextFilDiscu,
-				"<h3><b>The possible commands in the chat are:</b></h4>" + "<ul>"
-						+ "<h4>This is a text.</h4>"
+				"<h3><b>The possible commands in the chat are:</b></h4>" + "<ul>" + "<h4>This is a test 2.</h4>"
 						+ "<h4>Insert <b>@nickname</b> to send a private message.</h4>"
 						+ "<h4>Type hexadecimal code to change the color of name profile.</h4>"
 						+ "<h4>Some emojis are implemented!</h4>"
@@ -187,7 +186,7 @@ public class ClientGui extends Thread {
 					jfr.add(jsbtndeco);
 					jfr.revalidate();
 					jfr.repaint();
-					
+
 					jtextFilDiscu.setBackground(Color.WHITE);
 					jtextListUsers.setBackground(Color.WHITE);
 				} catch (Exception ex) {
@@ -210,7 +209,7 @@ public class ClientGui extends Thread {
 				jfr.remove(jtextFilDiscu);
 				jfr.revalidate();
 				jfr.repaint();
-				
+
 				read.interrupt();
 				jtextListUsers.setText(null);
 				jtextFilDiscu.setBackground(Color.LIGHT_GRAY);
@@ -276,7 +275,6 @@ public class ClientGui extends Thread {
 		}
 	}
 
-	
 	/**
 	 * Launch the application.
 	 */
