@@ -35,7 +35,7 @@ public class ClientGui extends Thread {
 		this.serverName = "localhost";
 		this.PORT = 12345;
 		this.name = "nickname";
-
+		
 		String fontfamily = "Arial, sans-serif";
 		Font font = new Font(fontfamily, Font.PLAIN, 15);
 
@@ -148,6 +148,7 @@ public class ClientGui extends Thread {
 		// info sur le Chat
 		appendToPane(jtextFilDiscu,
 				"<h3><b>The possible commands in the chat are:</b></h4>" + "<ul>"
+						+ "<h4>This is a text.</h4>"
 						+ "<h4>Insert <b>@nickname</b> to send a private message.</h4>"
 						+ "<h4>Type hexadecimal code to change the color of name profile.</h4>"
 						+ "<h4>Some emojis are implemented!</h4>"
