@@ -6,12 +6,19 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.net.*;
+import java.text.ParseException;
 import java.time.*;
 import java.io.*;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.html.*;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import java.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
@@ -38,6 +45,7 @@ public class Client extends Thread {
 	final JButton btnSend;
 
 	final JLabel lblWeatherInfo;
+	final JLabel lblStockInfo;
 
 	private String oldMsg = "";
 	private Thread read;
@@ -47,6 +55,7 @@ public class Client extends Thread {
 	private String NICKNAME;
 
 	Weather weather = new Weather();
+	Stock stock = new Stock();
 	BufferedReader input;
 	PrintWriter output;
 	Socket server;
@@ -78,20 +87,31 @@ public class Client extends Thread {
 		jfr.setResizable(false);
 		jfr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+		/* Label: Stock Info (USDKRW) */
+		lblStockInfo = new JLabel();
+		lblStockInfo.setBorder(null);
+		lblStockInfo.setFont(font);
+		lblStockInfo.setBounds(250, 10, 150, 40);
+		try {
+			String price = stock.getStockPrice();
+			lblStockInfo.setText("USDKRW " + price + "₩");
+		} catch (ParseException e1) {
+			e1.printStackTrace();
+		}
+
 		/* Label: Weather Info (Temperature) */
 		lblWeatherInfo = new JLabel();
 		lblWeatherInfo.setBorder(null);
 		lblWeatherInfo.setFont(font);
-		lblWeatherInfo.setBounds(400, 10, 60, 40);
+		lblWeatherInfo.setBounds(400, 10, 100, 40);
 		try {
 			String weatherInfo = weather.getWeather();
 
 			String temp = weatherInfo.substring(weatherInfo.indexOf("\"category\":\"T1H\""),
 					weatherInfo.indexOf("\"category\":\"UUU\""));
 			temp = temp.substring(temp.indexOf("\"obsrValue\":\"") + "\"obsrValue\":\"".length(), temp.indexOf("\"}"));
-			
+
 			lblWeatherInfo.setText(temp + '\u00B0' + "C");
-			System.out.println(temp + '\u00B0' + "C");
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -143,14 +163,12 @@ public class Client extends Thread {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					sendMessage();
 				}
-
 				// get last message on Up key pressed
 				if (e.getKeyCode() == KeyEvent.VK_UP) {
 					String currentMessage = tfChatInput.getText().trim();
 					tfChatInput.setText(oldMsg);
 					oldMsg = currentMessage;
 				}
-
 				// get last message on Down key pressed
 				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
 					String currentMessage = tfChatInput.getText().trim();
@@ -188,6 +206,7 @@ public class Client extends Thread {
 				jfr.add(tfAddress);
 				jfr.add(btnConnect);
 				jfr.add(lblWeatherInfo);
+				jfr.add(lblStockInfo);
 
 				// remove elements
 				jfr.remove(btnSend);
@@ -259,6 +278,7 @@ public class Client extends Thread {
 					jfr.add(spChatInput);
 					jfr.add(btnDisconnect);
 					jfr.add(lblWeatherInfo);
+					jfr.add(lblStockInfo);
 
 					jfr.revalidate();
 					jfr.repaint();
@@ -291,6 +311,7 @@ public class Client extends Thread {
 		jfr.add(tfPort);
 		jfr.add(tfAddress);
 		jfr.add(lblWeatherInfo);
+		jfr.add(lblStockInfo);
 
 		// show frame
 		jfr.setVisible(true);
@@ -300,15 +321,15 @@ public class Client extends Thread {
 	 * Check if if all fields are not empty.
 	 */
 	public class TextListener implements DocumentListener {
-		JTextField jtf1;
-		JTextField jtf2;
-		JTextField jtf3;
+		JTextField tf1;
+		JTextField tf2;
+		JTextField tf3;
 		JButton btnConnect;
 
-		public TextListener(JTextField jtf1, JTextField jtf2, JTextField jtf3, JButton btnConnect) {
-			this.jtf1 = jtf1;
-			this.jtf2 = jtf2;
-			this.jtf3 = jtf3;
+		public TextListener(JTextField tf1, JTextField tf2, JTextField tf3, JButton btnConnect) {
+			this.tf1 = tf1;
+			this.tf2 = tf2;
+			this.tf3 = tf3;
 			this.btnConnect = btnConnect;
 		}
 
@@ -316,8 +337,7 @@ public class Client extends Thread {
 		}
 
 		public void removeUpdate(DocumentEvent e) {
-			if (jtf1.getText().trim().equals("") || jtf2.getText().trim().equals("")
-					|| jtf3.getText().trim().equals("")) {
+			if (tf1.getText().trim().equals("") || tf2.getText().trim().equals("") || tf3.getText().trim().equals("")) {
 				btnConnect.setEnabled(false);
 			} else {
 				btnConnect.setEnabled(true);
@@ -325,8 +345,7 @@ public class Client extends Thread {
 		}
 
 		public void insertUpdate(DocumentEvent e) {
-			if (jtf1.getText().trim().equals("") || jtf2.getText().trim().equals("")
-					|| jtf3.getText().trim().equals("")) {
+			if (tf1.getText().trim().equals("") || tf2.getText().trim().equals("") || tf3.getText().trim().equals("")) {
 				btnConnect.setEnabled(false);
 			} else {
 				btnConnect.setEnabled(true);
@@ -410,15 +429,15 @@ class Weather {
 		String ny = "128"; // 경도
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
-		
+
 		LocalDateTime ldtNow = LocalDateTime.now();
 //		String now = ldtNow.format(formatter);
 //		System.out.println(now);
-		
+
 		LocalDateTime ldtEarlier = ldtNow.minusMinutes(30);
 		String earlier = ldtEarlier.format(formatter);
 //		System.out.println(earlier);
-		
+
 		String baseDate = earlier.substring(0, 8); // 조회하고싶은 날짜
 		String baseTime = earlier.substring(8, 12); // 조회하고싶은 시간
 
@@ -468,22 +487,51 @@ class Weather {
 
 		// POP 강수확률 %
 		// PTY 강수형태 코드값
-		// R06 6시간 강수량 범주(1mm)
+		// R06 6시간 강수량 mm
 		// REH 습도 %
-		// RN1
-		// S06 6시간 신적설 범주(1cm)
+		// RN1 1시간 강수량 mm
+		// S06 6시간 신적설 cm
 		// SKY 하늘상태 코드값
 		// T1H 1시간 기온 C
 		// T3H 3시간 기온 C
 		// TMN 아침 최저기온 C
 		// TMX 낮 최고기온 C
 		// UUU 풍속(동서성분) m/s
-		// VEC
 		// VVV 풍속(남북성분) m/s
-		// WSD
-		
-		System.out.println(sb.toString());
+		// WSD 풍속 m/s
+		// VEC 풍향 deg
+
+//		System.out.println(sb.toString());
 
 		return sb.toString();
+	}
+}
+
+class Stock {
+	public String getStockPrice() throws ParseException {
+		Document doc;
+		String value = "";
+
+		String URL = "https://finance.naver.com/marketindex/exchangeDetail.naver?marketindexCd=FX_USDKRW";
+		try {
+			doc = Jsoup.connect(URL).get();
+
+			Elements html = doc.select(".selectbox-default[selected]");
+
+			// check if the element was found
+			if (html.size() > 0) {
+				// get the first element
+				Element juga = html.first();
+
+				// get the value of the value attribute
+				value = juga.val();
+//		      System.out.println(value);
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return value;
 	}
 }

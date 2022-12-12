@@ -8,5 +8,6 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="/Users/jsnam/git/Messenger/Messenger/lib/json-simple-1.1.1.jar"/>
 	<classpathentry kind="lib" path="/Users/jsnam/git/Messenger/Messenger/lib/mysql-connector-j-8.0.31.jar"/>
+	<classpathentry kind="lib" path="/Users/jsnam/git/Messenger/Messenger/lib/jsoup-1.15.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
