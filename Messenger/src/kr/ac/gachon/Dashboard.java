@@ -61,15 +61,12 @@ public class Dashboard extends JFrame {
 		contentPanel.setLayout(null);
 
 		lbWelcomeUser = new JLabel("Hello! ");
-
 		ImageIcon twitterImageIcon = new ImageIcon(Dashboard.class.getResource("/images/twitter.png"));
 		Image twitterImage = twitterImageIcon.getImage(); // transform it
-		Image newTwitterImage = twitterImage.getScaledInstance(60, 60, java.awt.Image.SCALE_SMOOTH); // scale it the
-																										// smooth way
+		Image newTwitterImage = twitterImage.getScaledInstance(60, 60, java.awt.Image.SCALE_SMOOTH); // scale it the																	// smooth way
 		twitterImageIcon = new ImageIcon(newTwitterImage); // transform it back
 		lbWelcomeUser.setIcon(twitterImageIcon);
 		lbWelcomeUser.setBorder(null);
-
 		lbWelcomeUser.setFont(new Font("Lucida Grande", Font.PLAIN, 17));
 		lbWelcomeUser.setHorizontalAlignment(SwingConstants.CENTER);
 		lbWelcomeUser.setBounds(6, 6, 488, 46);

@@ -13,8 +13,10 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.awt.Color;
 
+/**
+ * Server class.
+ */
 public class Server {
-
 	private int port;
 	private List<User> clients;
 	private ServerSocket server;
@@ -26,11 +28,17 @@ public class Server {
 		new Server(12345).run();
 	}
 
+	/**
+	 * Server.
+	 */
 	public Server(int port) {
 		this.port = port;
 		this.clients = new ArrayList<User>();
 	}
 
+	/**
+	 * Implement the behavior of a thread.
+	 */
 	public void run() throws IOException {
 		server = new ServerSocket(port) {
 			protected void finalize() throws IOException {
@@ -43,48 +51,56 @@ public class Server {
 			// accepts a new client
 			Socket client = server.accept();
 
-			// get nickname of newUser
+			// get nickname of new user
 			@SuppressWarnings("resource")
 			String nickname = (new Scanner(client.getInputStream())).nextLine();
-			nickname = nickname.replace(",", ""); // ',' use for serialisation
+			nickname = nickname.replace(",", ""); // ',' use for serialization
 			nickname = nickname.replace(" ", "_");
 			System.out.println(
 					"New Client: \"" + nickname + "\"\n\t     Host:" + client.getInetAddress().getHostAddress());
 
-			// create new User
+			// create a new user
 			User newUser = new User(client, nickname);
 
-			// add newUser message to list
+			// add new user message to list
 			this.clients.add(newUser);
 
 			// welcome message
 			newUser.getOutStream().println("<b>Welcome</b> " + newUser.toString());
 
-			// create a new thread for newUser incoming messages handling
+			// create a new thread for new user incoming messages handling
 			new Thread(new UserHandler(this, newUser)).start();
 		}
 	}
 
-	// delete a user from the list
+	/**
+	 * Delete a user from the list.
+	 */
 	public void removeUser(User user) {
 		this.clients.remove(user);
 	}
 
-	// send incoming msg to all Users
+	/**
+	 * Send incoming message to all users.
+	 */
 	public void broadcastMessages(String msg, User userSender) {
 		for (User client : this.clients) {
 			client.getOutStream().println(userSender.toString() + "<span>: " + msg + "</span>");
 		}
 	}
 
-	// send list of clients to all Users
+	/**
+	 * Send list of clients to all users.
+	 */
 	public void broadcastAllUsers() {
 		for (User client : this.clients) {
 			client.getOutStream().println(this.clients);
 		}
 	}
 
-	// send message to a User (String)
+	/**
+	 * Send string message to user.
+	 */
 	public void sendMessageToUser(String msg, User userSender, String user) {
 		boolean find = false;
 		for (User client : this.clients) {
@@ -101,17 +117,25 @@ public class Server {
 	}
 }
 
+/**
+ * UserHandler class.
+ */
 class UserHandler implements Runnable {
-
 	private Server server;
 	private User user;
 
+	/**
+	 * User handler.
+	 */
 	public UserHandler(Server server, User user) {
 		this.server = server;
 		this.user = user;
 		this.server.broadcastAllUsers();
 	}
 
+	/**
+	 * Implement the behavior of a thread.
+	 */
 	public void run() {
 		String message;
 
@@ -120,7 +144,7 @@ class UserHandler implements Runnable {
 		while (sc.hasNextLine()) {
 			message = sc.nextLine();
 
-			// smiley
+			// smiley emojis
 			message = message.replace(":)",
 					"<img src='http://4.bp.blogspot.com/-ZgtYQpXq0Yo/UZEDl_PJLhI/AAAAAAAADnk/2pgkDG-nlGs/s1600/facebook-smiley-face-for-comments.png'>");
 			message = message.replace(":D",
@@ -142,7 +166,7 @@ class UserHandler implements Runnable {
 			message = message.replace(":O",
 					"<img src='http://1.bp.blogspot.com/-MB8OSM9zcmM/TvitChHcRRI/AAAAAAAAAiE/kdA6RbnbzFU/s400/surprised%2Bemoticon.png'>");
 
-			// gestion des messages private
+			// private message management
 			if (message.charAt(0) == '@') {
 				if (message.contains(" ")) {
 					System.out.println("private msg : " + message);
@@ -150,24 +174,32 @@ class UserHandler implements Runnable {
 					String userPrivate = message.substring(1, firstSpace);
 					server.sendMessageToUser(message.substring(firstSpace + 1, message.length()), user, userPrivate);
 				}
+			}
 
-				// gestion du changement
-			} else if (message.charAt(0) == '#') {
+			// color management
+			else if (message.charAt(0) == '#') {
 				user.changeColor(message);
 				// update color for all other users
 				this.server.broadcastAllUsers();
-			} else {
+			}
+
+			// other management
+			else {
 				// update user list
 				server.broadcastMessages(message, user);
 			}
 		}
-		// end of Thread
+
+		// end of thread
 		server.removeUser(user);
 		this.server.broadcastAllUsers();
 		sc.close();
 	}
 }
 
+/**
+ * User class.
+ */
 class User {
 	private static int nbUser = 0;
 	private int userId;
@@ -177,6 +209,9 @@ class User {
 //	private Socket client;
 	private String color;
 
+	/**
+	 * Set info of user.
+	 */
 	public User(Socket client, String name) throws IOException {
 		this.streamOut = new PrintStream(client.getOutputStream());
 		this.streamIn = client.getInputStream();
@@ -187,15 +222,17 @@ class User {
 		nbUser += 1;
 	}
 
-	// change color user
+	/**
+	 * Change color of user.
+	 */
 	public void changeColor(String hexColor) {
-		// check if it's a valid hexColor
+		// check if it's a valid hexadecimal color
 		Pattern colorPattern = Pattern.compile("#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})");
 		Matcher m = colorPattern.matcher(hexColor);
 
 		if (m.matches()) {
 			Color c = Color.decode(hexColor);
-			// if the Color is too Bright don't change
+			// if the color is too bright, don't change
 			double luma = 0.2126 * c.getRed() + 0.7152 * c.getGreen() + 0.0722 * c.getBlue(); // per ITU-R BT.709
 			if (luma > 160) {
 				this.getOutStream().println("<b>Color Too Bright</b>");
@@ -208,27 +245,38 @@ class User {
 		this.getOutStream().println("<b>Failed to change color</b>");
 	}
 
-	// getteur
+	/**
+	 * Get output stream.
+	 */
 	public PrintStream getOutStream() {
 		return this.streamOut;
 	}
 
+	/**
+	 * Get input stream.
+	 */
 	public InputStream getInputStream() {
 		return this.streamIn;
 	}
 
+	/**
+	 * Get nickname of user.
+	 */
 	public String getNickname() {
 		return this.nickname;
 	}
 
-	// print user with his color
+	/**
+	 * Print user with color.
+	 */
 	public String toString() {
-
 		return "<u><span style='color:" + this.color + "'>" + this.getNickname() + "</span></u>";
-
 	}
 }
 
+/**
+ * ColorInt class.
+ */
 class ColorInt {
 	public static String[] mColors = { "#3079ab", // dark blue
 			"#e15258", // red
@@ -244,6 +292,9 @@ class ColorInt {
 			"#4d7358", // green
 	};
 
+	/**
+	 * Get color.
+	 */
 	public static String getColor(int i) {
 		return mColors[i % mColors.length];
 	}
